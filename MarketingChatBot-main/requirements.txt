@@ -1,0 +1,10 @@
+langchain
+streamlit
+streamlit_chat
+pandas
+openai
+faiss-cpu
+tiktoken
+langchain-community
+langchain-openai
+python-dotenv
