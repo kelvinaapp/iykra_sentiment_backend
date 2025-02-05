@@ -4,12 +4,12 @@ from sqlalchemy.orm import Session
 from typing import List, Optional
 import models
 import schemas
-from database import SessionLocal, engine, get_db
+from db.database import SessionLocal, engine, get_db
 import uvicorn
-from social_media_routes import router as social_media_router
-from social_media_sentiment_routes import router as sentiment_router
-from product_review_sentiment import router as product_review_router
-from ai_generation import router as ai_router, generate_dashboard_summary
+from routes_social_media import router as social_media_router
+from routes_social_media_sentiment import router as sentiment_router
+from routes_product_review_sentiment import router as product_review_router
+from routes_ai_chatbot import router as ai_router
 import logging
 
 # Set up logging
