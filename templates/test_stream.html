@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Stream Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 0 20px;
+        }
+        #chatBox {
+            border: 1px solid #ccc;
+            padding: 20px;
+            height: 400px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        #messageInput {
+            width: 70%;
+            padding: 10px;
+            margin-right: 10px;
+        }
+        #sendButton {
+            padding: 10px 20px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            cursor: pointer;
+        }
+        #sendButton:hover {
+            background-color: #45a049;
+        }
+        .response {
+            margin: 10px 0;
+            padding: 10px;
+            background-color: #f9f9f9;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Chat Stream Test</h1>
+    <div id="chatBox"></div>
+    <div>
+        <input type="text" id="messageInput" placeholder="Type your message...">
+        <button id="sendButton">Send</button>
+    </div>
+
+    <script>
+        const chatBox = document.getElementById('chatBox');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+
+        function appendMessage(text, isUpdate = false) {
+            if (isUpdate) {
+                // Update the last response
+                const lastResponse = chatBox.lastElementChild;
+                if (lastResponse) {
+                    lastResponse.textContent = text;
+                } else {
+                    // If no response exists yet, create new one
+                    const div = document.createElement('div');
+                    div.textContent = text;
+                    div.className = 'response';
+                    chatBox.appendChild(div);
+                }
+            } else {
+                // Create new message
+                const div = document.createElement('div');
+                div.textContent = text;
+                div.className = 'response';
+                chatBox.appendChild(div);
+            }
+            chatBox.scrollTop = chatBox.scrollHeight;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            // Disable input while processing
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+
+            // Show user message
+            appendMessage(`You: ${message}`);
+            let responseText = 'Assistant: ';
+            appendMessage(responseText, false);
+
+            try {
+                const response = await fetch('http://localhost:8000/api/ai/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({ message: message })
+                });
+
+                const reader = response.body.getReader();
+                const decoder = new TextDecoder();
+                let buffer = '';
+
+                while (true) {
+                    const { value, done } = await reader.read();
+                    if (done) break;
+
+                    buffer += decoder.decode(value, { stream: true });
+                    
+                    // Process complete SSE messages
+                    const lines = buffer.split('\n');
+                    buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+                    for (const line of lines) {
+                        if (line.startsWith('data: ')) {
+                            const content = line.slice(6).trim();
+                            if (content === '[DONE]') {
+                                // Final update already done
+                                break;
+                            } else {
+                                try {
+                                    const jsonContent = JSON.parse(content);
+                                    if (jsonContent.text) {
+                                        responseText += jsonContent.text;
+                                        appendMessage(responseText, true);
+                                    }
+                                } catch (e) {
+                                    console.error('Error parsing JSON:', e);
+                                }
+                            }
+                        }
+                    }
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                appendMessage('Error: ' + error.message);
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                messageInput.value = '';
+                messageInput.focus();
+            }
+        }
+
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                sendMessage();
+            }
+        });
+    </script>
+</body>
+</html>
