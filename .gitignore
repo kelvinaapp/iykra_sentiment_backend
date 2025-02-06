@@ -35,6 +35,7 @@ instance/
 # Database files
 *.db
 *.sqlite3
+vector_db/
 
 # Logs
 *.log
@@ -57,3 +58,6 @@ coverage.xml
 
 # Windows
 Thumbs.db
+
+tools/langchain-rag backup.py
+MarketingChatBot-main/

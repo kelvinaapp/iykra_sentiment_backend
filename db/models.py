@@ -1,7 +1,7 @@
 from sqlalchemy import Column, Integer, String, Float, Date, Boolean, ForeignKey, ARRAY, JSON, DECIMAL, Text
 from sqlalchemy.dialects.postgresql import JSONB
 from sqlalchemy.orm import relationship
-from database import Base
+from db.database import Base
 
 class ProductCatalog(Base):
     __tablename__ = "product_catalog"
@@ -28,7 +28,7 @@ class ProductCatalog(Base):
     upper_material = Column(String(100))
     
     reviews = relationship("ReviewedProduct", back_populates="product")
-    sales = relationship("SaleProduct", back_populates="product")
+    sales_products = relationship("SalesProducts", back_populates="product")
     campaigns = relationship("Campaign", back_populates="product")
 
 class ReviewedProduct(Base):
@@ -61,7 +61,7 @@ class CustomerDemographics(Base):
     location = Column(String(255))
     
     reviews = relationship("ReviewedProduct", back_populates="customer")
-    sales = relationship("Sale", back_populates="customer")
+    sales = relationship("Sales", back_populates="customer")
 
 class Campaign(Base):
     __tablename__ = "campaign"
@@ -102,6 +102,9 @@ class SocialMedia(Base):
     hashtags = Column(ARRAY(String))
     trend_score = Column(DECIMAL)
     brand = Column(String(100))
+    collabs = Column(String(255))
+    collabs_status = Column(String(50))
+    jenis_konten = Column(String(100))
     sentiment = relationship("SentimentSocialMedia", back_populates="post", uselist=False)
 
 class SentimentSocialMedia(Base):
@@ -115,7 +118,7 @@ class SentimentSocialMedia(Base):
     
     post = relationship("SocialMedia", back_populates="sentiment")
 
-class Sale(Base):
+class Sales(Base):
     __tablename__ = "sales"
     
     transaction_id = Column(Integer, primary_key=True, index=True)
@@ -128,17 +131,17 @@ class Sale(Base):
     customer_id = Column(Integer, ForeignKey("customer_demographics.customer_id"))
     
     customer = relationship("CustomerDemographics", back_populates="sales")
-    products = relationship("SaleProduct", back_populates="sale")
+    sales_products = relationship("SalesProducts", back_populates="sale")
 
-class SaleProduct(Base):
+class SalesProducts(Base):
     __tablename__ = "sale_product"
     
     id = Column(Integer, primary_key=True, index=True)
     transaction_id = Column(Integer, ForeignKey("sales.transaction_id"))
     product_id = Column(Integer, ForeignKey("product_catalog.product_id"))
     
-    sale = relationship("Sale", back_populates="products")
-    product = relationship("ProductCatalog", back_populates="sales")
+    sale = relationship("Sales", back_populates="sales_products")
+    product = relationship("ProductCatalog", back_populates="sales_products")
 
 class SustainabilityIntegration(Base):
     __tablename__ = "sustainability_integration"
