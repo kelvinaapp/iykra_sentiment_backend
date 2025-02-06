@@ -3,14 +3,8 @@ from sqlalchemy.orm import Session
 from sqlalchemy import func, desc, and_, text
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
-<<<<<<< HEAD:product_review_sentiment.py
-from database import get_db
-from models import ProductCatalog, Review, Customer
-import schemas
-=======
 from db.database import get_db
 from db.models import ProductCatalog, ReviewedProduct, CustomerDemographics
->>>>>>> recover-commit:routes_product_review_sentiment.py
 import logging
 import json
 
