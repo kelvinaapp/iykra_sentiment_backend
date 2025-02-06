@@ -2,13 +2,13 @@ from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session
 from typing import List, Optional
-import models
-import schemas
+import db.models
 from db.database import SessionLocal, engine, get_db
 import uvicorn
 from routes_social_media import router as social_media_router
 from routes_social_media_sentiment import router as sentiment_router
 from routes_product_review_sentiment import router as product_review_router
+from routes_sales import router as sales_router
 from routes_ai_chatbot import router as ai_router
 import logging
 from tools.faiss_vectordb import load_vector_db

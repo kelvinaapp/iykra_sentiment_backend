@@ -4,8 +4,7 @@ from sqlalchemy import func, desc
 from datetime import datetime, timedelta
 from typing import List, Dict, Any
 from db.database import get_db
-from db.models import SocialMediaExternalTrends, SentimentSocialMedia, Campaign
-import schemas
+from db.models import SocialMedia, SentimentSocialMedia, Campaign
 import logging
 
 logger = logging.getLogger(__name__)
