@@ -281,40 +281,46 @@ def get_trending_hashtags(
 ):
     """Get trending hashtags filtered by brand and date range"""
     try:
-        end_date = datetime.now() - timedelta(days=1)
-        start_date = end_date - timedelta(days=7)
-        prev_start = start_date - timedelta(days=7)
+        # Default date range if not provided
+        if not startDate or not endDate:
+            end_date = datetime.now() - timedelta(days=1)
+            start_date = end_date - timedelta(days=7)
+            startDate = start_date.strftime("%Y-%m-%d")
+            endDate = end_date.strftime("%Y-%m-%d")
         
-        # Base queries
+        # Calculate previous period
+        end_date = datetime.strptime(endDate, "%Y-%m-%d")
+        start_date = datetime.strptime(startDate, "%Y-%m-%d")
+        period_length = (end_date - start_date).days
+        prev_start = (start_date - timedelta(days=period_length)).strftime("%Y-%m-%d")
+        prev_end = startDate
+        
+        # Base query for current period
         current_query = db.query(
             func.unnest(SocialMedia.hashtags).label('hashtag'),
             func.count('*').label('count')
         ).filter(
-            SocialMedia.post_date > start_date,
-            SocialMedia.post_date <= end_date
+            SocialMedia.post_date.between(startDate, endDate)
         )
         
+        # Base query for previous period
         prev_query = db.query(
             func.unnest(SocialMedia.hashtags).label('hashtag'),
             func.count('*').label('count')
         ).filter(
-            SocialMedia.post_date > prev_start,
-            SocialMedia.post_date <= start_date
+            SocialMedia.post_date.between(prev_start, prev_end)
         )
         
-        filters = []
+        # Apply brand filter if provided
         if brand:
-            filters.append(SocialMedia.brand == brand)
-        if startDate and endDate:
-            filters.append(SocialMedia.post_date.between(startDate, endDate))
-
-        # Apply filters
-        current_query = current_query.filter(*filters)
-        prev_query = prev_query.filter(*filters)
+            current_query = current_query.filter(SocialMedia.brand == brand)
+            prev_query = prev_query.filter(SocialMedia.brand == brand)
         
+        # Group and create subqueries
         current_hashtags = current_query.group_by('hashtag').subquery()
         prev_hashtags = prev_query.group_by('hashtag').subquery()
         
+        # Get trending hashtags
         trending = db.query(
             current_hashtags.c.hashtag,
             current_hashtags.c.count,
@@ -326,6 +332,7 @@ def get_trending_hashtags(
             current_hashtags.c.count.desc()
         ).limit(5).all()
 
+        # Calculate growth and format response
         return [
             {
                 "tag": hashtag,
@@ -335,6 +342,7 @@ def get_trending_hashtags(
             for hashtag, count, prev_count in trending
         ]
     except Exception as e:
+        logger.error(f"Error in get_trending_hashtags: {str(e)}")
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.get("/top-comments")
