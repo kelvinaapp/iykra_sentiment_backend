@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, Request
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
-from flask import jsonify
 import logging
 from pydantic import BaseModel
 from typing import Dict, Any
@@ -14,7 +13,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 # Configure logging
 logging.basicConfig(level=logging.DEBUG)
+logging.getLogger("httpx").setLevel(logging.ERROR)
+logging.getLogger("openai").setLevel(logging.ERROR)
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 router = APIRouter(
     prefix="/api/ai",
@@ -42,7 +45,7 @@ def init_rag_agent(request: Request = None):
     try:
         vector_store = request.app.state.vector_store if request else None
         rag_agent = LangChainRAG(vector_store=vector_store)
-        logger.info("LangChainRAG agent initialized successfully")
+        # logger.info("LangChainRAG agent initialized successfully")
     except Exception as e:
         logger.error(f"Failed to initialize LangChainRAG agent: {str(e)}")
         raise e
@@ -62,11 +65,11 @@ async def get_dashboard_summary(request: DashboardSummaryRequest):
     Generate an AI summary for dashboard data
     """
     try:
-        logger.info(f"Received request for brand: {request.brand}")
+        # logger.info(f"Received request for brand: {request.brand}")
         # logger.debug(f"Dashboard data: {json.dumps(request.dashboard_data, indent=2)}")
         
         result = generate_dashboard_summary(request.dashboard_data, request.brand)
-        logger.info(f"Generated summary status: {result['status']}")
+        # logger.info(f"Generated summary status: {result['status']}")
         
         if result["status"] == "error":
             logger.error(f"Error in generate_dashboard_summary: {result['message']}")
@@ -86,7 +89,7 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
         if rag_agent is None:
             init_rag_agent(request)
             
-        logger.info(f"Received chat message: {chat_request.message}")
+        # logger.info(f"Received chat message: {chat_request.message}")
         
         async def event_generator():
             try:
@@ -132,7 +135,7 @@ async def reset_agent(request: Request):
     Reset the RAG agent by reinitializing it
     """
     try:
-        logger.info("Reinitializing RAG agent...")
+        # logger.info("Reinitializing RAG agent...")
         init_rag_agent(request)
         return {"status": "success", "message": "Agent reinitialized successfully"}
     except Exception as e:
@@ -144,7 +147,7 @@ def generate_dashboard_summary(dashboard_data, brand):
     Generate an AI summary of the entire dashboard data
     """
     try:
-        logger.info(f"Generating summary for brand: {brand}")
+        # logger.info(f"Generating summary for brand: {brand}")
         
         # Prepare the prompt with dashboard data
         prompt = f"""Analyze this dashboard data for {brand} and provide a comprehensive business summary:
@@ -164,9 +167,9 @@ def generate_dashboard_summary(dashboard_data, brand):
         # logger.debug(f"Generated prompt: {prompt}")
 
         # Call OpenAI API
-        logger.info("Calling OpenAI API...")
+        # logger.info("Calling OpenAI API...")
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-4o",
             messages=[
                 {"role": "system", "content": "You are a business analytics expert who provides clear, actionable insights from dashboard data."},
                 {"role": "user", "content": prompt}
@@ -174,7 +177,7 @@ def generate_dashboard_summary(dashboard_data, brand):
             temperature=0.7,
             max_tokens=1000
         )
-        logger.info("Received response from OpenAI API")
+        # logger.info("Received response from OpenAI API")
 
         # Extract the summary
         summary = response.choices[0].message.content

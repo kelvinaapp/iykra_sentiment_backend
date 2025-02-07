@@ -26,7 +26,7 @@ def get_engagement_metrics(
     db: Session = Depends(get_db)
 ):
     """Get overall social media engagement metrics filtered by brand and date range"""
-    logger.info(f"Processing /metrics endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /metrics endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         filters = []
         if brand:
@@ -62,7 +62,7 @@ def get_engagement_metrics(
             "impressions": f"{total_impressions / 1000:.1f}K",
             "totalPosts": str(total_posts)
         }
-        logger.info(f"Returning metrics response: {response}")
+        # logger.info(f"Returning metrics response: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /metrics endpoint: {str(e)}")
@@ -76,7 +76,7 @@ async def get_timeseries_data(
     db: Session = Depends(get_db)
 ):
     """Get daily engagement and reach data filtered by brand and date range"""
-    logger.info(f"Processing /timeseries endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /timeseries endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         # Use provided date range or default to last 7 days
         if startDate and endDate:
@@ -147,7 +147,7 @@ async def get_content_performance(
     db: Session = Depends(get_db)
 ):
     """Get engagement and reach rates by content type filtered by brand and date range"""
-    logger.info(f"Processing /content-performance endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /content-performance endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         query = db.query(
             SocialMedia.jenis_konten,
@@ -214,7 +214,7 @@ async def get_platform_performance(
     db: Session = Depends(get_db)
 ):
     """Get reach and engagement metrics by platform filtered by brand and date range"""
-    logger.info(f"Processing /platform-performance endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /platform-performance endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         query = db.query(
             SocialMedia.platform,
@@ -275,7 +275,7 @@ async def get_top_posts_by_reach(
     db: Session = Depends(get_db)
 ):
     """Get top 5 posts by reach filtered by brand and date range"""
-    logger.info(f"Processing /top-posts/reach endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /top-posts/reach endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         # Base query
         query = db.query(
@@ -292,7 +292,7 @@ async def get_top_posts_by_reach(
         
         # Apply date filters if provided
         if startDate and endDate:
-            logger.info(f"Applying date filter: {startDate} to {endDate}")
+            # logger.info(f"Applying date filter: {startDate} to {endDate}")
             query = query.filter(SocialMedia.post_date.between(startDate, endDate))
         
         posts = query.order_by(
@@ -311,7 +311,7 @@ async def get_top_posts_by_reach(
                 "collabs": post.collabs,
                 "hashtags": post.hashtags
             })
-        logger.info(f"Returning top-posts/reach response: {result}")
+        # logger.info(f"Returning top-posts/reach response: {result}")
         return result
     except Exception as e:
         logger.error(f"Error in /top-posts/reach endpoint: {str(e)}")
@@ -325,7 +325,7 @@ async def get_top_posts_by_engagement(
     db: Session = Depends(get_db)
 ):
     """Get top 5 posts by engagement filtered by brand and date range"""
-    logger.info(f"Processing /top-posts/engagement endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /top-posts/engagement endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         # Base query
         query = db.query(
@@ -359,7 +359,7 @@ async def get_top_posts_by_engagement(
                 "collabs": post.collabs,
                 "hashtags": post.hashtags
             })
-        logger.info(f"Returning top-posts/engagement response: {result}")
+        # logger.info(f"Returning top-posts/engagement response: {result}")
         return result
     except Exception as e:
         logger.error(f"Error in /top-posts/engagement endpoint: {str(e)}")
@@ -373,7 +373,7 @@ async def get_top_hashtags(
     db: Session = Depends(get_db)
 ):
     """Get top hashtags by reach and engagement filtered by brand and date range"""
-    logger.info(f"Processing /top-hashtags endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /top-hashtags endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         # Using array_elements to unnest hashtags array
         reach_hashtags = db.query(
@@ -441,7 +441,7 @@ async def get_top_collaborators(
     db: Session = Depends(get_db)
 ):
     """Get top collaborators by reach and engagement filtered by brand and date range"""
-    logger.info(f"Processing /top-collaborators endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
+    # logger.info(f"Processing /top-collaborators endpoint request for brand: {brand}, date range: {startDate} to {endDate}")
     try:
         # Get top collaborators by reach
         reach_collabs = db.query(

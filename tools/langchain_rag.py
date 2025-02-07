@@ -16,7 +16,14 @@ import uuid
 import logging
 import json
 
+# Set logging level for all loggers
+logging.getLogger("langchain").setLevel(logging.ERROR)
+logging.getLogger("openai").setLevel(logging.ERROR)
+logging.getLogger("urllib3").setLevel(logging.ERROR)
+logging.getLogger("asyncio").setLevel(logging.ERROR)
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 class State(TypedDict):
     question: str
@@ -187,21 +194,21 @@ class LangChainRAG:
         return str(uuid.uuid4())
 
 
-# Example usage
-if __name__ == "__main__":
-    # Initialize the RAG system
-    rag = LangChainRAG()
+# # Example usage
+# if __name__ == "__main__":
+#     # Initialize the RAG system
+#     rag = LangChainRAG()
     
-    # Example questions
-    questions = [
-        "Ada brand apa saja di database?",
-        # "Berapa penjualanku di Q4 2024"
-    ]
+#     # Example questions
+#     questions = [
+#         "Ada brand apa saja di database?",
+#         # "Berapa penjualanku di Q4 2024"
+#     ]
     
-    # Run questions
-    async def response():
-        for question in questions:
-            async for event in rag.run_agent(question):
-                print(event, end="")
+#     # Run questions
+#     async def response():
+#         for question in questions:
+#             async for event in rag.run_agent(question):
+#                 print(event, end="")
 
-    asyncio.run(response())
+#     asyncio.run(response())

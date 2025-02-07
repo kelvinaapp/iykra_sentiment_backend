@@ -14,15 +14,25 @@ import logging
 from tools.faiss_vectordb import load_vector_db
 
 # Set up logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.ERROR,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s'
+)
+
+# Set logging level for all third-party libraries
+logging.getLogger("uvicorn").setLevel(logging.ERROR)
+logging.getLogger("fastapi").setLevel(logging.ERROR)
+logging.getLogger("sqlalchemy").setLevel(logging.ERROR)
+
 logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 # Initialize vector database
 vector_store = None
 try:
-    logger.info("Loading vector database...")
+    # logger.info("Loading vector database...")
     vector_store = load_vector_db("vector_db")
-    logger.info("Vector database loaded successfully")
+    # logger.info("Vector database loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load vector database: {str(e)}")
     raise e
@@ -36,7 +46,7 @@ app = FastAPI(
 # CORS middleware configuration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # In production, replace with specific origins
+    allow_origins=["*"],  # TODO: Replace with specific origins in production
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -58,4 +68,10 @@ def read_root():
     return {"message": "Welcome to the Shoe Brand Sentiment Analysis API"}
 
 if __name__ == "__main__":
-    uvicorn.run("main:app", host="0.0.0.0", port=8000, reload=True)
+    uvicorn.run(
+        "main:app",
+        host="0.0.0.0",
+        port=8000,
+        workers=4,
+        reload=False
+    )

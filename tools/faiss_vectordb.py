@@ -12,7 +12,14 @@ from dotenv import load_dotenv
 import os
 from db.database import engine, get_db_session, DATABASE_URL
 from sqlalchemy import text
+import logging
 
+# Set logging level for all loggers
+logging.getLogger("faiss").setLevel(logging.ERROR)
+logging.getLogger("langchain").setLevel(logging.ERROR)
+
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.ERROR)
 
 load_dotenv()
 
@@ -234,7 +241,7 @@ def save_vector_db(vector_store: FAISS, path: str = "vector_db"):
     
 def load_vector_db(path: str = "vector_db"):
     
-    print(f"\n=== Loading Vector Store ===")
+    print(f"=== Loading Vector Store ===")
     embeddings = OpenAIEmbeddings(model="text-embedding-3-large")
     
     vector_store = FAISS.load_local(

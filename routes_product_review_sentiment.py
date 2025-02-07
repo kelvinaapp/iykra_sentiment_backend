@@ -28,7 +28,7 @@ def get_review_metrics(
     db: Session = Depends(get_db)
 ):
     """Get overall product review metrics"""
-    logger.info("Processing /metrics endpoint request")
+    # logger.info("Processing /metrics endpoint request")
     try:
         query = db.query(ReviewedProduct).join(ProductCatalog)
         
@@ -56,7 +56,7 @@ def get_review_metrics(
             "positiveCount": positive_reviews,
             "negativeCount": negative_reviews
         }
-        logger.info(f"Returning metrics response: {response}")
+        # logger.info(f"Returning metrics response: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /metrics endpoint: {str(e)}")
@@ -71,7 +71,7 @@ def get_sentiment_distribution(
     db: Session = Depends(get_db)
 ):
     """Get sentiment distribution data"""
-    logger.info("Processing /sentiment-distribution endpoint request")
+    # logger.info("Processing /sentiment-distribution endpoint request")
     try:
         query = db.query(ReviewedProduct).join(ProductCatalog)
         
@@ -96,7 +96,7 @@ def get_sentiment_distribution(
                 "backgroundColor": ['#00897b', '#f44336']
             }]
         }
-        logger.info(f"Returning sentiment distribution response")
+        # logger.info(f"Returning sentiment distribution response")
         return response
     except Exception as e:
         logger.error(f"Error in /sentiment-distribution endpoint: {str(e)}")
@@ -111,7 +111,7 @@ def get_aspect_sentiment(
     db: Session = Depends(get_db)
 ):
     """Get sentiment scores for different aspects"""
-    logger.info("Processing /aspect-sentiment endpoint request")
+    # logger.info("Processing /aspect-sentiment endpoint request")
     try:
         # Map the aspect names
         aspect_mapping = {
@@ -184,7 +184,7 @@ def get_aspect_sentiment(
                 }
             ]
         }
-        logger.info("Returning aspect sentiment response")
+        # logger.info("Returning aspect sentiment response")
         return response
     except Exception as e:
         logger.error(f"Error in /aspect-sentiment endpoint: {str(e)}")
@@ -197,7 +197,7 @@ def get_products(
     endDate: str = Query(None, description="End date for filtering (YYYY-MM-DD)"),
     db: Session = Depends(get_db)):
     """Get list of all products"""
-    logger.info("Processing /products endpoint request")
+    # logger.info("Processing /products endpoint request")
     try:
         query = db.query(ReviewedProduct.product_id, ProductCatalog.product_name
         ).join(
@@ -218,7 +218,7 @@ def get_products(
 
         products = query.all()
         
-        logger.info(f"Found {len(products)} products")
+        # logger.info(f"Found {len(products)} products")
         return [{"product_id": p[0], "product_name": p[1]} for p in products]
     except Exception as e:
         logger.error(f"Error in /products endpoint: {str(e)}")
@@ -234,7 +234,7 @@ def get_products_review_sentiment(
     db: Session = Depends(get_db)
 ):
     """get review sentiments based on product id"""
-    logger.info("Processing /products-review-sentiment endpoint request")
+    # logger.info("Processing /products-review-sentiment endpoint request")
     try:
         query = db.query(ReviewedProduct).filter(ReviewedProduct.product_id == product_id)
         
@@ -248,7 +248,7 @@ def get_products_review_sentiment(
 
         reviews = query.all()
         
-        logger.info(f"Found {len(reviews)} reviews for product_id {product_id}")
+        # logger.info(f"Found {len(reviews)} reviews for product_id {product_id}")
         
         # Mapping from database aspect names to frontend display names
         aspects = {
@@ -265,7 +265,7 @@ def get_products_review_sentiment(
                 if isinstance(aspect_scores, str):
                     aspect_scores = json.loads(aspect_scores)
                 
-                logger.info(f"Processing aspect_sentiments: {aspect_scores}")
+                # logger.info(f"Processing aspect_sentiments: {aspect_scores}")
                 
                 # Map the database aspect names to frontend names and count sentiments
                 for db_aspect, score in aspect_scores.items():
@@ -289,7 +289,7 @@ def get_products_review_sentiment(
                 "negative": neg_percent
             }
         
-        logger.info(f"Final result: {result}")    
+        # logger.info(f"Final result: {result}")    
         return result
     except Exception as e:
         logger.error(f"Error in /products-review-sentiment endpoint: {str(e)}")
@@ -310,7 +310,7 @@ def get_review_sentiment_by_upper_material(
     db: Session = Depends(get_db)
 ):
     """Get review sentiment by upper material for each aspect"""
-    logger.info("Processing /review-sentiment-by-upper-material endpoint request")
+    # logger.info("Processing /review-sentiment-by-upper-material endpoint request")
     try:
         # Get all reviews with their product's upper material
         query = db.query(
@@ -390,7 +390,7 @@ def get_review_sentiment_by_upper_material(
                     'negative': neg_percent
                 }
 
-        logger.info(f"Calculated sentiment percentages by aspect and upper material")
+        # logger.info(f"Calculated sentiment percentages by aspect and upper material")
         return response
     except Exception as e:
         logger.error(f"Error in /review-sentiment-by-upper-material endpoint: {str(e)}")
@@ -406,7 +406,7 @@ def get_review_sentiment_by_sole_material(
     db: Session = Depends(get_db)
 ):
     """Get review sentiment by sole material for each aspect"""
-    logger.info("Processing /review-sentiment-by-sole-material endpoint request")
+    # logger.info("Processing /review-sentiment-by-sole-material endpoint request")
     try:
         # Get all reviews with their product's sole material
         query = db.query(
@@ -486,7 +486,7 @@ def get_review_sentiment_by_sole_material(
                     'negative': neg_percent
                 }
 
-        logger.info(f"Calculated sentiment percentages by aspect and sole material")
+        # logger.info(f"Calculated sentiment percentages by aspect and sole material")
         return response
     except Exception as e:
         logger.error(f"Error in /review-sentiment-by-sole-material endpoint: {str(e)}")
@@ -502,7 +502,7 @@ def get_review_sentiment_by_origin(
     db: Session = Depends(get_db)
 ):
     """Get review sentiment by origin for each aspect"""
-    logger.info("Processing /review-sentiment-by-origin endpoint request")
+    # logger.info("Processing /review-sentiment-by-origin endpoint request")
     try:
         # Get all reviews with their product's origin
         query = db.query(
@@ -582,7 +582,7 @@ def get_review_sentiment_by_origin(
                     'negative': neg_percent
                 }
 
-        logger.info(f"Calculated sentiment percentages by aspect and origin")
+        # logger.info(f"Calculated sentiment percentages by aspect and origin")
         return response
     except Exception as e:
         logger.error(f"Error in /review-sentiment-by-origin endpoint: {str(e)}")
@@ -598,7 +598,7 @@ def get_review_sentiment_by_gender(
     db: Session = Depends(get_db)
 ):
     """Get review sentiment by gender orientation for each aspect"""
-    logger.info("Processing /review-sentiment-by-gender endpoint request")
+    # logger.info("Processing /review-sentiment-by-gender endpoint request")
     try:
         # Get all reviews with their product's gender orientation
         query = db.query(
@@ -678,7 +678,7 @@ def get_review_sentiment_by_gender(
                     'negative': neg_percent
                 }
 
-        logger.info(f"Calculated sentiment percentages by aspect and gender")
+        # logger.info(f"Calculated sentiment percentages by aspect and gender")
         return response
     except Exception as e:
         logger.error(f"Error in /review-sentiment-by-gender endpoint: {str(e)}")
@@ -694,7 +694,7 @@ def get_top_keywords(
     db: Session = Depends(get_db)
 ):
     """Get top 10 positive and negative keywords from review texts"""
-    logger.info("Processing /top-keywords endpoint request")
+    # logger.info("Processing /top-keywords endpoint request")
     try:
         query = db.query(ReviewedProduct.keyword_tags).join(ProductCatalog)
         
@@ -730,7 +730,7 @@ def get_emotion_intensity(
     db: Session = Depends(get_db)
 ):
     """Get distribution of emotion intensity in reviews"""
-    logger.info("Processing /emotion-intensity endpoint request")
+    # logger.info("Processing /emotion-intensity endpoint request")
     try:
         query = db.query(ReviewedProduct).join(ProductCatalog)
         
@@ -769,7 +769,7 @@ def get_emotion_intensity(
             "veryHigh": round((very_high / total_reviews) * 100)
         }
         
-        logger.info(f"Returning emotion intensity distribution: {response}")
+        # logger.info(f"Returning emotion intensity distribution: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /emotion-intensity endpoint: {str(e)}")
@@ -783,7 +783,7 @@ def get_top_topics(
     db: Session = Depends(get_db)
 ):
     """Get top review topics based on keyword tags"""
-    logger.info("Processing /top-topics endpoint request")
+    # logger.info("Processing /top-topics endpoint request")
     try:
         query = db.query(
             func.unnest(ReviewedProduct.keyword_tags).label('topic'),
@@ -807,7 +807,7 @@ def get_top_topics(
             if topic  # Filter out None values
         ]
         
-        logger.info(f"Returning top topics: {response}")
+        # logger.info(f"Returning top topics: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /top-topics endpoint: {str(e)}")
@@ -821,7 +821,7 @@ def get_rating_sentiment_correlation(
     db: Session = Depends(get_db)
 ):
     """Get correlation between ratings and sentiment scores"""
-    logger.info("Processing /rating-sentiment-correlation endpoint request")
+    # logger.info("Processing /rating-sentiment-correlation endpoint request")
     try:
         query = db.query(
             ReviewedProduct.rating,
@@ -850,7 +850,7 @@ def get_rating_sentiment_correlation(
             if rating is not None
         ]
         
-        logger.info(f"Returning rating-sentiment correlation: {response}")
+        # logger.info(f"Returning rating-sentiment correlation: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /rating-sentiment-correlation endpoint: {str(e)}")
@@ -865,7 +865,7 @@ def get_helpful_reviews(
     db: Session = Depends(get_db)
 ):
     """Get most helpful reviews based on helpful votes"""
-    logger.info("Processing /helpful-reviews endpoint request")
+    # logger.info("Processing /helpful-reviews endpoint request")
     try:
         query = db.query(
             ReviewedProduct.review_text,
@@ -898,7 +898,7 @@ def get_helpful_reviews(
             if review_text  # Filter out None values
         ]
         
-        logger.info(f"Returning helpful reviews: {response}")
+        # logger.info(f"Returning helpful reviews: {response}")
         return response
     except Exception as e:
         logger.error(f"Error in /helpful-reviews endpoint: {str(e)}")
@@ -912,7 +912,7 @@ def get_sentiment_rating_trend(
     db: Session = Depends(get_db)
 ):
     """Get daily trend of average sentiment and rating"""
-    logger.info("Processing /trend endpoint request")
+    # logger.info("Processing /trend endpoint request")
     try:
         query = db.query(
             ReviewedProduct.review_date,
@@ -944,7 +944,7 @@ def get_sentiment_rating_trend(
             for date, avg_sentiment, avg_rating, count in results
         ]
         
-        logger.info(f"Returning trend data with {len(response)} data points")
+        # logger.info(f"Returning trend data with {len(response)} data points")
         return response
     except Exception as e:
         logger.error(f"Error in /trend endpoint: {str(e)}")

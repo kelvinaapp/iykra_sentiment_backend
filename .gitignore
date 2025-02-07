@@ -61,3 +61,6 @@ Thumbs.db
 
 tools/langchain-rag backup.py
 MarketingChatBot-main/
+
+Dockerfile
+k8s-deployment.yaml
