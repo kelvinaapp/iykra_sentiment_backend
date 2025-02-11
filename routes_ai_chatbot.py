@@ -1,4 +1,5 @@
 from fastapi import APIRouter, Depends, HTTPException, Request
+from fastapi.responses import JSONResponse, StreamingResponse
 import os
 from dotenv import load_dotenv
 from openai import OpenAI
@@ -8,16 +9,16 @@ from typing import Dict, Any
 import json
 import httpx
 from tools.langchain_rag import LangChainRAG
-from fastapi.responses import StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
+import time
 
 # Configure logging
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(level=logging.INFO)
 logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("openai").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.ERROR)
+logger.setLevel(logging.INFO)
 
 router = APIRouter(
     prefix="/api/ai",
@@ -37,15 +38,21 @@ client = OpenAI(
     http_client=http_client
 )
 
-# Initialize LangChainRAG instance when module is imported
-rag_agent = None
+# Initialize dictionary to store RAG agents per session
+rag_agents = {}
+session_timestamps = {}
+SESSION_TIMEOUT = 60  # 30 minutes
 
 def init_rag_agent(request: Request = None):
-    global rag_agent
     try:
         vector_store = request.app.state.vector_store if request else None
-        rag_agent = LangChainRAG(vector_store=vector_store)
-        # logger.info("LangChainRAG agent initialized successfully")
+        new_agent = LangChainRAG(vector_store=vector_store)
+        session_id = new_agent.config['configurable']['thread_id']
+        rag_agents[session_id] = new_agent
+        session_timestamps[session_id] = time.time()
+        logger.info(f" New session created: {session_id}")
+        logger.info(f" Active sessions: {len(rag_agents)}")
+        return session_id
     except Exception as e:
         logger.error(f"Failed to initialize LangChainRAG agent: {str(e)}")
         raise e
@@ -85,11 +92,35 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
     Chat with the AI agent using RAG (Retrieval Augmented Generation)
     """
     try:
-        # Initialize agent if not already initialized
-        if rag_agent is None:
-            init_rag_agent(request)
-            
-        # logger.info(f"Received chat message: {chat_request.message}")
+        session_id = request.headers.get("session-id")
+        logger.info(f"🔄 Incoming chat request with session: {session_id}")
+        
+        # Create new session if none exists
+        if not session_id or session_id not in rag_agents:
+            if not session_id:
+                logger.info("❌ No session ID provided")
+                session_id = init_rag_agent(request)
+            else:
+                logger.info(f"❌ Session {session_id} not found")
+                return JSONResponse(
+                    content={"status": "session no valid", "message": "Your Session is Invalid"},
+                    status_code=401
+                )
+        
+        # Check if session has expired
+        if session_id in session_timestamps and time.time() - session_timestamps[session_id] > SESSION_TIMEOUT:
+            logger.info(f"❌ Session {session_id} has expired")
+            return JSONResponse(
+                content={"status": "session expired", "message": "Your Session is expired"},
+                status_code=401
+            )
+        
+        # Update session timestamp
+        session_timestamps[session_id] = time.time()
+        logger.info(f"✅ Using session: {session_id}")
+        
+        # Get the agent for this session
+        rag_agent = rag_agents[session_id]
         
         async def event_generator():
             try:
@@ -112,7 +143,7 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
                 yield f"data: {error_message}\n\n"
                 yield "data: [DONE]\n\n"
         
-        return StreamingResponse(
+        response = StreamingResponse(
             event_generator(),
             media_type="text/event-stream",
             headers={
@@ -121,23 +152,34 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
                 "Content-Type": "text/event-stream;charset=utf-8",
                 "Access-Control-Allow-Origin": "*",
                 "Access-Control-Allow-Methods": "POST, OPTIONS",
-                "Access-Control-Allow-Headers": "Content-Type",
+                "Access-Control-Allow-Headers": "Content-Type, session-id",
+                "Access-Control-Expose-Headers": "session-id",
                 "Access-Control-Max-Age": "86400",
+                "session-id": session_id
             }
         )
+        return response
     except Exception as e:
         logger.error(f"Error in chat_with_agent endpoint: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))
 
 @router.post("/chat/reset")
 async def reset_agent(request: Request):
-    """
-    Reset the RAG agent by reinitializing it
-    """
     try:
-        # logger.info("Reinitializing RAG agent...")
-        init_rag_agent(request)
-        return {"status": "success", "message": "Agent reinitialized successfully"}
+        session_id = request.headers.get("session-id")
+        if session_id and session_id in rag_agents:
+            # Clean up old session
+            logger.info(f"Cleaning up session: {session_id}")
+            del rag_agents[session_id]
+            del session_timestamps[session_id]
+            
+        # Create new session
+        new_session_id = ""
+        logger.info(f"Reset completed. New session: {new_session_id}")
+        return JSONResponse(
+                    content={"status": "success", "message": "Agent is deleted successfully"},
+                    status_code=200
+                )
     except Exception as e:
         logger.error(f"Error reinitializing agent: {str(e)}", exc_info=True)
         raise HTTPException(status_code=500, detail=str(e))

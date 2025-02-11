@@ -48,7 +48,7 @@ class LangChainRAG:
         """
         load_dotenv()
         self.memory = MemorySaver()
-        self.config = {"configurable": {"thread_id": self.generate_thread_id()}}
+        self.config = {"configurable": {"thread_id": str(uuid.uuid4())}}
         
         # Set environment variables
         if not os.environ.get("LANGSMITH_API_KEY"):
@@ -57,7 +57,7 @@ class LangChainRAG:
         
         # Initialize components
         self.db = SQLDatabase.from_uri(DATABASE_URL)
-        self.llm = ChatOpenAI(model=model_name, temperature=temperature, streaming=streaming)
+        self.llm = ChatOpenAI(model=model_name, temperature=temperature, streaming=streaming, verbose=False)
         self.toolkit = SQLDatabaseToolkit(db=self.db, llm=self.llm)
         self.tools = self.toolkit.get_tools()
         

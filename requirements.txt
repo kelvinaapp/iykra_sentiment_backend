@@ -13,3 +13,4 @@ python-dotenv
 langchain-community
 langgraph
 gunicorn
+apscheduler

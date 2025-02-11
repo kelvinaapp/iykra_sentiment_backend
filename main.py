@@ -31,7 +31,10 @@ logger.setLevel(logging.ERROR)
 vector_store = None
 try:
     # logger.info("Loading vector database...")
+    
     vector_store = load_vector_db("vector_db")
+    # vector_store = load_vector_db("/dev/shm/vector_db")
+    
     # logger.info("Vector database loaded successfully")
 except Exception as e:
     logger.error(f"Failed to load vector database: {str(e)}")
