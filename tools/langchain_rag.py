@@ -153,16 +153,14 @@ class LangChainRAG:
                 stream_mode='messages'
             ):
                 if msg.content and metadata["langgraph_node"] == "agent":
-                    yield json.dumps({"text": msg.content})  # print(msg.content, end="", flush=True)
+                    # yield json.dumps({"text": msg.content})  # print(msg.content, end="", flush=True)
                 
-                    # async for processed_event in self.process_event(event):
-                    #     if processed_event:  # Only yield non-empty events
-                    #         # Accumulate tokens and send when we have a complete word
-                    #         current_token += processed_event
-                    #         if current_token.endswith(" ") or any(current_token.endswith(p) for p in [".", ",", "!", "?", ":", ";"]):
-                    #             # Format the event as a proper SSE data event
-                    #             yield json.dumps({"text": current_token})
-                    #             current_token = ""
+                    for content in msg.content:
+                        current_token += content
+                        if current_token.endswith(" ") or any(current_token.endswith(p) for p in [".", ",", "!", "?", ":", ";"]):
+                            # Format the event as a proper SSE data event
+                            yield json.dumps({"text": current_token})
+                            current_token = ""
             
             # Send any remaining token
             if current_token:
@@ -172,22 +170,22 @@ class LangChainRAG:
             yield error_msg
             logger.error(f"Error in run_agent: {str(e)}")
 
-    async def process_event(self, event):
-        """Process streaming events from the agent"""
-        try:
-            kind = event["event"]
+    # async def process_event(self, event):
+    #     """Process streaming events from the agent"""
+    #     try:
+    #         kind = event["event"]
             
-            if kind == "on_chat_model_stream":
-                chunk = event["data"]["chunk"]
-                # Handle AIMessageChunk directly
-                if hasattr(chunk, "content"):
-                    content = chunk.content
-                    if content:
-                        yield content
-        except Exception as e:
-            error_msg = f"Error processing event: {str(e)}"
-            logger.error(f"Error processing event: {str(e)}, Event: {event}")
-            yield error_msg
+    #         if kind == "on_chat_model_stream":
+    #             chunk = event["data"]["chunk"]
+    #             # Handle AIMessageChunk directly
+    #             if hasattr(chunk, "content"):
+    #                 content = chunk.content
+    #                 if content:
+    #                     yield content
+    #     except Exception as e:
+    #         error_msg = f"Error processing event: {str(e)}"
+    #         logger.error(f"Error processing event: {str(e)}, Event: {event}")
+    #         yield error_msg
 
     def generate_thread_id(self):
         """Generate a unique thread ID"""

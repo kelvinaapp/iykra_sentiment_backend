@@ -41,7 +41,7 @@ client = OpenAI(
 # Initialize dictionary to store RAG agents per session
 rag_agents = {}
 session_timestamps = {}
-SESSION_TIMEOUT = 86400  # in seconds = 1 day
+SESSION_TIMEOUT = 43200  # 12 hours
 
 def init_rag_agent(request: Request = None):
     try:
