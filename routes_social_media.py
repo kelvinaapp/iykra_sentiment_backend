@@ -57,10 +57,10 @@ def get_engagement_metrics(
 
         # Response
         response = {
-            "totalEngagement": f"{total_engagement / 1000:.1f}K",
-            "reach": f"{total_reach / 1000:.1f}K",
-            "impressions": f"{total_impressions / 1000:.1f}K",
-            "totalPosts": str(total_posts)
+            "totalEngagement": total_engagement,
+            "reach": total_reach,
+            "impressions": total_impressions,
+            "totalPosts": total_posts
         }
         # logger.info(f"Returning metrics response: {response}")
         return response

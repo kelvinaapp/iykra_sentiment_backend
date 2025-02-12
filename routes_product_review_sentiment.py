@@ -93,7 +93,7 @@ def get_sentiment_distribution(
             "labels": ["Positive", "Negative"],
             "datasets": [{
                 "data": [positive, negative],
-                "backgroundColor": ['#00897b', '#f44336']
+                "backgroundColor": ['#0092F4 ', '#262B40 ']
             }]
         }
         # logger.info(f"Returning sentiment distribution response")
@@ -173,13 +173,13 @@ def get_aspect_sentiment(
                 {
                     "label": "Positive",
                     "data": positive_scores,
-                    "backgroundColor": '#00897b',
+                    "backgroundColor": '#0092F4 ',
                     "stack": 'Stack 0',
                 },
                 {
                     "label": "Negative",
                     "data": negative_scores,
-                    "backgroundColor": '#f44336',
+                    "backgroundColor": '#262B40 ',
                     "stack": 'Stack 0',
                 }
             ]
@@ -799,7 +799,7 @@ def get_top_topics(
         query = query.filter(*filters)
         
         # Group by topic and order by count
-        results = query.group_by('topic').order_by(text('count DESC')).limit(10).all()
+        results = query.group_by('topic').order_by(text('count DESC')).limit(7).all()
         
         response = [
             {"topic": topic, "count": count}

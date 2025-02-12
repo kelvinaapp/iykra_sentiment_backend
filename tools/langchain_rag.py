@@ -36,7 +36,7 @@ class QueryOutput(TypedDict):
     query: Annotated[str, ..., "Syntactically valid SQL query."]
 
 class LangChainRAG:
-    def __init__(self, vector_store=None, model_name="gpt-4o-mini", temperature=0, streaming=True):
+    def __init__(self, vector_store=None, model_name="gpt-4o", temperature=0, streaming=True):
         """
         Initialize LangChainRAG with configuration
         
@@ -67,7 +67,7 @@ class LangChainRAG:
             self.setup_retriever()
         
         # Setup agent
-        self.setup_agent()
+        self.setup_sql_agent()
     
     def setup_retriever(self):
         """Setup vector store retriever and create retriever tool"""
@@ -85,7 +85,7 @@ class LangChainRAG:
         )
         self.tools.append(self.retriever_tool)
     
-    def setup_agent(self):
+    def setup_sql_agent(self):
         """Setup the agent with system message and tools"""
         prompt_template = ChatPromptTemplate.from_messages([
             ("system", """
@@ -119,15 +119,12 @@ class LangChainRAG:
                         if the question ask about Quartile, calculate in Weekly average,
                         if the question ask about Yearly, calculate in Monthly average.
                         etc.
-                    - Use a nested list if it needs to.
                 
-                Guidelines for the response:
-                    - Use Rupiah Currency
-                    - Always maintain a professional and helpful tone.
-                    - Format your response in a clear and structured way
-                    - NEVER give explanation without supporting data from the database.
-                    - Unless explicitly asked in the question, NEVER answer in table format 
-                    - NEVER SHOW a SQL Query
+                Last step. Your task is to take the query results and generate a natural, well-structured summary that highlights key insights. 
+                create a clear, concise summaries of query results. Ensure that numbers and statistics are formatted in an easy-to-read way, using bullet points or numbered lists when appropriate, while maintaining a professional tone.
+                When applicable, format currency in rupiah using the symbol Rp. It's important to avoid mentioning any technical database terms in your summary. 
+                Focus on insights and trends, using clear, non-technical language to communicate your findings effectively. 
+                Highlight significant findings and provide context when relevant to enhance understanding.
             """)
         ])
 
@@ -150,19 +147,22 @@ class LangChainRAG:
         """Run the agent with streaming events"""
         try:
             current_token = ""
-            async for event in self.agent.astream_events(
+            async for msg, metadata in self.agent.astream(
                 {"messages": [HumanMessage(content=question)]},
-                version="v2",
                 config=self.config,
+                stream_mode='messages'
             ):
-                async for processed_event in self.process_event(event):
-                    if processed_event:  # Only yield non-empty events
-                        # Accumulate tokens and send when we have a complete word
-                        current_token += processed_event
-                        if current_token.endswith(" ") or any(current_token.endswith(p) for p in [".", ",", "!", "?", ":", ";"]):
-                            # Format the event as a proper SSE data event
-                            yield json.dumps({"text": current_token})
-                            current_token = ""
+                if msg.content and metadata["langgraph_node"] == "agent":
+                    yield json.dumps({"text": msg.content})  # print(msg.content, end="", flush=True)
+                
+                    # async for processed_event in self.process_event(event):
+                    #     if processed_event:  # Only yield non-empty events
+                    #         # Accumulate tokens and send when we have a complete word
+                    #         current_token += processed_event
+                    #         if current_token.endswith(" ") or any(current_token.endswith(p) for p in [".", ",", "!", "?", ":", ";"]):
+                    #             # Format the event as a proper SSE data event
+                    #             yield json.dumps({"text": current_token})
+                    #             current_token = ""
             
             # Send any remaining token
             if current_token:

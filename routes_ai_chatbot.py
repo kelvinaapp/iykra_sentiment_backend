@@ -18,7 +18,7 @@ logging.getLogger("httpx").setLevel(logging.ERROR)
 logging.getLogger("openai").setLevel(logging.ERROR)
 
 logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.ERROR)
 
 router = APIRouter(
     prefix="/api/ai",
@@ -41,7 +41,7 @@ client = OpenAI(
 # Initialize dictionary to store RAG agents per session
 rag_agents = {}
 session_timestamps = {}
-SESSION_TIMEOUT = 60  # 30 minutes
+SESSION_TIMEOUT = 86400  # in seconds = 1 day
 
 def init_rag_agent(request: Request = None):
     try:
