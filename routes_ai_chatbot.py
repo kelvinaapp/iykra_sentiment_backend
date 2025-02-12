@@ -95,28 +95,31 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
         session_id = request.headers.get("session-id")
         logger.info(f"🔄 Incoming chat request with session: {session_id}")
         
-        # Check if session exists and has not expired
-        if session_id and session_id in rag_agents:
-            # Check if session has expired
-            if session_id in session_timestamps and time.time() - session_timestamps[session_id] > SESSION_TIMEOUT:
-                logger.info(f"❌ Session {session_id} has expired")
-                return JSONResponse(
-                    content={"status": "session expired", "message": "Your Session is expired"},
-                    status_code=401
-                )
-            # Valid session, update timestamp
-            session_timestamps[session_id] = time.time()
-        else:
-            # Create new session if no session ID provided
+        # Create new session if none exists
+        if not session_id or session_id not in rag_agents.keys():
             if not session_id:
                 logger.info("❌ No session ID provided")
                 session_id = init_rag_agent(request)
-            # Create new session if session ID is not found
             else:
-                logger.info(f"❌ Session {session_id} not found, creating new session")
-                session_id = init_rag_agent(request)
+                logger.info(f"❌ Session {session_id} not found")
+                return JSONResponse(
+                    content={"status": "session no valid", "message": "Your Session is Invalid"},
+                    status_code=401
+                )
         
+        # Check if session has expired
+        if session_id in session_timestamps and time.time() - session_timestamps[session_id] > SESSION_TIMEOUT:
+            logger.info(f"❌ Session {session_id} has expired")
+            return JSONResponse(
+                content={"status": "session expired", "message": "Your Session is expired"},
+                status_code=401
+            )
+            
         logger.info(f" rag agents keys: {rag_agents.keys()}")
+        
+        # Update session timestamp
+        session_timestamps[session_id] = time.time()
+        logger.info(f"✅ Using session: {session_id}")
         
         # Get the agent for this session
         rag_agent = rag_agents[session_id]
@@ -153,7 +156,7 @@ async def chat_with_agent(request: Request, chat_request: ChatRequest):
                 "Access-Control-Allow-Methods": "POST, OPTIONS",
                 "Access-Control-Allow-Headers": "Content-Type, session-id",
                 "Access-Control-Expose-Headers": "session-id",
-                "Access-Control-Max-Age": "43200",
+                "Access-Control-Max-Age": "86400",
                 "session-id": session_id
             }
         )
